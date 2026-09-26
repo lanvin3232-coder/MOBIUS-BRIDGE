@@ -185,6 +185,100 @@ static int test_zero_length_input(void) {
     return 0;
 }
 
+static int test_boundary_sweep(void) {
+    mb_ctx *ctx = NULL;
+
+    unsigned char input[4096];
+    unsigned char output[4112];
+
+    for (size_t i = 0; i < sizeof(input); ++i) {
+        input[i] = (unsigned char)(i & 0xffu);
+    }
+
+    if (mb_create(&ctx) != MB_OK) {
+        return 70;
+    }
+
+    for (size_t len = 1; len <= sizeof(input); ++len) {
+        size_t output_len = 0;
+
+        int rc = mb_run(
+            ctx,
+            input,
+            len,
+            NULL,
+            &output_len
+        );
+
+        if (rc != MB_NEED_OUTPUT) {
+            mb_destroy(ctx);
+            return 71;
+        }
+
+        if (output_len != len) {
+            mb_destroy(ctx);
+            return 72;
+        }
+
+        memset(output, 0xA5, sizeof(output));
+
+        output_len = len - 1;
+
+        rc = mb_run(
+            ctx,
+            input,
+            len,
+            output,
+            &output_len
+        );
+
+        if (rc != MB_NEED_OUTPUT) {
+            mb_destroy(ctx);
+            return 73;
+        }
+
+        if (output_len != len) {
+            mb_destroy(ctx);
+            return 74;
+        }
+
+        output_len = len;
+
+        rc = mb_run(
+            ctx,
+            input,
+            len,
+            output,
+            &output_len
+        );
+
+        if (rc != MB_OK) {
+            mb_destroy(ctx);
+            return 75;
+        }
+
+        if (output_len != len) {
+            mb_destroy(ctx);
+            return 76;
+        }
+
+        if (memcmp(input, output, len) != 0) {
+            mb_destroy(ctx);
+            return 77;
+        }
+
+        for (size_t i = len; i < sizeof(output); ++i) {
+            if (output[i] != 0xA5) {
+                mb_destroy(ctx);
+                return 78;
+            }
+        }
+    }
+
+    mb_destroy(ctx);
+    return 0;
+}
+
 int main(void) {
     int rc;
 
@@ -209,6 +303,9 @@ int main(void) {
     rc = test_zero_length_input();
     if (rc != 0) return rc;
 
-    printf("MOBIUS-BRIDGE ABI contract tests: PASS\n");
+    rc = test_boundary_sweep();
+    if (rc != 0) return rc;
+
+    printf("MOBIUS-BRIDGE ABI + boundary sweep: PASS\n");
     return 0;
 }
