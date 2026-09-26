@@ -46,7 +46,7 @@ int mb_run(
         return MB_NEED_OUTPUT;
     }
 
-    memcpy(output, input, input_len);
+    memmove(output, input, input_len);
 
     *output_len = input_len;
     return MB_OK;
