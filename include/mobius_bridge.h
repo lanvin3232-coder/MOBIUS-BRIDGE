@@ -3,15 +3,27 @@
 
 #include <stddef.h>
 
+#if defined(_WIN32) || defined(__CYGWIN__)
+  #if defined(MOBIUS_BRIDGE_BUILD)
+    #define MB_API __declspec(dllexport)
+  #else
+    #define MB_API __declspec(dllimport)
+  #endif
+#elif defined(__GNUC__) && (__GNUC__ >= 4)
+  #define MB_API __attribute__((visibility("default")))
+#else
+  #define MB_API
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 typedef struct mb_ctx mb_ctx;
 
-int mb_create(mb_ctx **ctx);
+MB_API int mb_create(mb_ctx **ctx);
 
-int mb_run(
+MB_API int mb_run(
     mb_ctx *ctx,
     const void *input,
     size_t input_len,
@@ -19,7 +31,7 @@ int mb_run(
     size_t *output_len
 );
 
-void mb_destroy(mb_ctx *ctx);
+MB_API void mb_destroy(mb_ctx *ctx);
 
 #ifdef __cplusplus
 }
