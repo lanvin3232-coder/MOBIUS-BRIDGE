@@ -4,7 +4,7 @@ project(MOBIUS_BRIDGE C)
 
 enable_testing()
 
-add_library(mobius_bridge STATIC
+add_library(mobius_bridge SHARED
     src/bridge_stub.c
 )
 
@@ -13,10 +13,20 @@ target_include_directories(mobius_bridge
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+target_compile_definitions(mobius_bridge
+    PRIVATE
+        MOBIUS_BRIDGE_BUILD
+)
+
 set_target_properties(mobius_bridge PROPERTIES
     C_STANDARD 11
     C_STANDARD_REQUIRED YES
     C_EXTENSIONS NO
+
+    C_VISIBILITY_PRESET hidden
+    VISIBILITY_INLINES_HIDDEN YES
+
+    OUTPUT_NAME "mobius_bridge"
 )
 
 add_executable(test_bridge
