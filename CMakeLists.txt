@@ -18,6 +18,14 @@ target_compile_definitions(mobius_bridge
         MOBIUS_BRIDGE_BUILD
 )
 
+target_compile_options(mobius_bridge
+    PRIVATE
+        -Wall
+        -Wextra
+        -Wpedantic
+        -Werror
+)
+
 set_target_properties(mobius_bridge PROPERTIES
     C_STANDARD 11
     C_STANDARD_REQUIRED YES
@@ -31,6 +39,14 @@ set_target_properties(mobius_bridge PROPERTIES
 
 add_executable(test_bridge
     tests/test_bridge.c
+)
+
+target_compile_options(test_bridge
+    PRIVATE
+        -Wall
+        -Wextra
+        -Wpedantic
+        -Werror
 )
 
 target_link_libraries(test_bridge
