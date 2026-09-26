@@ -9,6 +9,9 @@ on:
 
 permissions:
   contents: read
+  id-token: write
+  attestations: write
+  artifact-metadata: write
 
 jobs:
   build-and-test:
@@ -333,6 +336,11 @@ jobs:
             echo "workflow_run=${GITHUB_RUN_ID}"
             echo "workflow_attempt=${GITHUB_RUN_ATTEMPT}"
           } > build/provenance.txt
+
+      - name: Generate signed build attestation
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6
+        with:
+          subject-path: build/libmobius_bridge.so
 
       - name: Upload verified bridge artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
