@@ -21,6 +21,24 @@ jobs:
       - name: Leakage check
         run: python3 tools/leakage_check.py
 
+      - name: Configure sanitizer build
+        run: |
+          cmake -S . -B build-sanitize \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_C_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer -O1 -g"
+
+      - name: Build sanitizer target
+        run: cmake --build build-sanitize
+
+      - name: Run sanitizer tests
+        env:
+          ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+          UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+        run: |
+          ctest \
+            --test-dir build-sanitize \
+            --output-on-failure
+
       - name: Configure Release
         run: |
           cmake -S . -B build \
