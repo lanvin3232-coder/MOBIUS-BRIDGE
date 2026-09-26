@@ -58,3 +58,24 @@ add_test(
     NAME bridge_runtime_test
     COMMAND test_bridge
 )
+
+add_executable(bench_bridge
+    bench/bench_bridge.c
+)
+
+target_compile_options(bench_bridge
+    PRIVATE
+        -Wall
+        -Wextra
+        -Wpedantic
+        -Werror
+)
+
+target_link_libraries(bench_bridge
+    PRIVATE
+        mobius_bridge
+)
+
+set_target_properties(bench_bridge PROPERTIES
+    OUTPUT_NAME "mobius_bridge_bench"
+)
