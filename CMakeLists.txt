@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.16)
 
 project(MOBIUS_BRIDGE C)
 
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED YES)
+set(CMAKE_C_EXTENSIONS NO)
+
 enable_testing()
 
 add_library(mobius_bridge SHARED
@@ -27,10 +31,6 @@ target_compile_options(mobius_bridge
 )
 
 set_target_properties(mobius_bridge PROPERTIES
-    C_STANDARD 11
-    C_STANDARD_REQUIRED YES
-    C_EXTENSIONS NO
-
     C_VISIBILITY_PRESET hidden
     VISIBILITY_INLINES_HIDDEN YES
 
