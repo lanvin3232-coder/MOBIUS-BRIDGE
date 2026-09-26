@@ -41,14 +41,63 @@ jobs:
             --test-dir build-sanitize \
             --output-on-failure
 
-      - name: Configure Release
+      - name: Configure hardened Release
         run: |
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_C_FLAGS_RELEASE="-O3 -DNDEBUG -ffile-prefix-map=${GITHUB_WORKSPACE}=. -fdebug-prefix-map=${GITHUB_WORKSPACE}=."
+            -DCMAKE_C_FLAGS_RELEASE="-O3 -DNDEBUG -fstack-protector-strong -D_FORTIFY_SOURCE=2 -ffile-prefix-map=${GITHUB_WORKSPACE}=. -fdebug-prefix-map=${GITHUB_WORKSPACE}=." \
+            -DCMAKE_SHARED_LINKER_FLAGS="-Wl,-z,defs,-z,relro,-z,now,-z,noexecstack"
 
       - name: Build
         run: cmake --build build
+
+      - name: Check RELRO
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if ! readelf -W -l build/libmobius_bridge.so \
+            | grep -q 'GNU_RELRO'; then
+            echo "GNU_RELRO not found."
+            exit 1
+          fi
+
+          echo "RELRO check: PASS"
+
+      - name: Check immediate binding
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if ! readelf -W -d build/libmobius_bridge.so \
+            | grep -Eq 'BIND_NOW|FLAGS.*NOW'; then
+            echo "Immediate binding not enabled."
+            exit 1
+          fi
+
+          echo "BIND_NOW check: PASS"
+
+      - name: Check non-executable stack
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          stack_line="$(
+            readelf -W -l build/libmobius_bridge.so \
+              | grep 'GNU_STACK' || true
+          )"
+
+          if [ -z "${stack_line}" ]; then
+            echo "GNU_STACK header not found."
+            exit 1
+          fi
+
+          if printf '%s\n' "${stack_line}" | grep -q 'RWE'; then
+            echo "Executable stack detected."
+            exit 1
+          fi
+
+          echo "Non-executable stack check: PASS"
 
       - name: Strip release binary
         run: |
