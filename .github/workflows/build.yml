@@ -99,6 +99,49 @@ jobs:
 
           echo "Non-executable stack check: PASS"
 
+      - name: Check dynamic dependency surface
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          readelf -W -d build/libmobius_bridge.so \
+            | sed -n 's/.*Shared library: \[\(.*\)\]/\1/p' \
+            | sort -u > actual_needed.txt
+
+          printf "%s\n" \
+            libc.so.6 \
+            | sort -u > expected_needed.txt
+
+          diff -u expected_needed.txt actual_needed.txt
+
+          echo "Dynamic dependency allowlist: PASS"
+
+      - name: Check forbidden runtime paths
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if readelf -W -d build/libmobius_bridge.so \
+            | grep -Eq '\(RPATH\)|\(RUNPATH\)'; then
+            echo "RPATH/RUNPATH detected."
+            exit 1
+          fi
+
+          echo "RPATH/RUNPATH check: PASS"
+
+      - name: Check text relocations
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if readelf -W -d build/libmobius_bridge.so \
+            | grep -q 'TEXTREL'; then
+            echo "TEXTREL detected."
+            exit 1
+          fi
+
+          echo "TEXTREL check: PASS"
+
       - name: Strip release binary
         run: |
           strip --strip-unneeded build/libmobius_bridge.so
