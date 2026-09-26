@@ -3,10 +3,20 @@
 #include <stdio.h>
 #include <string.h>
 
+_Static_assert(MB_ABI_VERSION_MAJOR == 0, "ABI major changed");
+_Static_assert(MB_ABI_VERSION_MINOR == 1, "ABI minor changed");
+_Static_assert(MB_ABI_VERSION_PATCH == 0, "ABI patch changed");
+
+_Static_assert(MB_OK == 0, "MB_OK value changed");
+_Static_assert(MB_NEED_OUTPUT == 1, "MB_NEED_OUTPUT value changed");
+_Static_assert(MB_ERR_INVALID == -1, "MB_ERR_INVALID value changed");
+_Static_assert(MB_ERR_NOMEM == -2, "MB_ERR_NOMEM value changed");
+_Static_assert(MB_ERR_NULL_INPUT == -3, "MB_ERR_NULL_INPUT value changed");
+
 static int test_normal_flow(void) {
     mb_ctx *ctx = NULL;
 
-    if (mb_create(&ctx) != 0) {
+    if (mb_create(&ctx) != MB_OK) {
         return 1;
     }
 
@@ -20,7 +30,7 @@ static int test_normal_flow(void) {
         strlen(input) + 1,
         output,
         &output_len
-    ) != 0) {
+    ) != MB_OK) {
         mb_destroy(ctx);
         return 2;
     }
@@ -35,7 +45,7 @@ static int test_normal_flow(void) {
 }
 
 static int test_create_null_rejected(void) {
-    if (mb_create(NULL) != -1) {
+    if (mb_create(NULL) != MB_ERR_INVALID) {
         return 10;
     }
 
@@ -53,7 +63,7 @@ static int test_null_context_rejected(void) {
         sizeof(input),
         output,
         &output_len
-    ) != -1) {
+    ) != MB_ERR_INVALID) {
         return 20;
     }
 
@@ -63,7 +73,7 @@ static int test_null_context_rejected(void) {
 static int test_null_output_length_rejected(void) {
     mb_ctx *ctx = NULL;
 
-    if (mb_create(&ctx) != 0) {
+    if (mb_create(&ctx) != MB_OK) {
         return 30;
     }
 
@@ -80,7 +90,7 @@ static int test_null_output_length_rejected(void) {
 
     mb_destroy(ctx);
 
-    if (rc != -1) {
+    if (rc != MB_ERR_INVALID) {
         return 31;
     }
 
@@ -90,7 +100,7 @@ static int test_null_output_length_rejected(void) {
 static int test_null_input_rejected(void) {
     mb_ctx *ctx = NULL;
 
-    if (mb_create(&ctx) != 0) {
+    if (mb_create(&ctx) != MB_OK) {
         return 40;
     }
 
@@ -107,7 +117,7 @@ static int test_null_input_rejected(void) {
 
     mb_destroy(ctx);
 
-    if (rc != -3) {
+    if (rc != MB_ERR_NULL_INPUT) {
         return 41;
     }
 
@@ -117,7 +127,7 @@ static int test_null_input_rejected(void) {
 static int test_size_negotiation(void) {
     mb_ctx *ctx = NULL;
 
-    if (mb_create(&ctx) != 0) {
+    if (mb_create(&ctx) != MB_OK) {
         return 50;
     }
 
@@ -134,7 +144,7 @@ static int test_size_negotiation(void) {
 
     mb_destroy(ctx);
 
-    if (rc != 1) {
+    if (rc != MB_NEED_OUTPUT) {
         return 51;
     }
 
@@ -148,7 +158,7 @@ static int test_size_negotiation(void) {
 static int test_zero_length_input(void) {
     mb_ctx *ctx = NULL;
 
-    if (mb_create(&ctx) != 0) {
+    if (mb_create(&ctx) != MB_OK) {
         return 60;
     }
 
@@ -164,7 +174,7 @@ static int test_zero_length_input(void) {
 
     mb_destroy(ctx);
 
-    if (rc != 0) {
+    if (rc != MB_OK) {
         return 61;
     }
 
@@ -199,6 +209,6 @@ int main(void) {
     rc = test_zero_length_input();
     if (rc != 0) return rc;
 
-    printf("MOBIUS-BRIDGE boundary tests: PASS\n");
+    printf("MOBIUS-BRIDGE ABI contract tests: PASS\n");
     return 0;
 }
