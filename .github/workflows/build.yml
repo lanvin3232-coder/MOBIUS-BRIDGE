@@ -24,6 +24,34 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
+      - name: Verify toolchain contract
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          expected_gcc="13.3.0"
+          expected_cmake="3.31.6"
+          expected_ld="2.42"
+
+          actual_gcc="$(gcc -dumpfullversion -dumpversion)"
+          actual_cmake="$(cmake --version | awk 'NR==1 {print $3}')"
+          actual_ld="$(ld --version | awk 'NR==1 {print $NF}')"
+
+          printf 'GCC:   expected=%s actual=%s\n' \
+            "${expected_gcc}" "${actual_gcc}"
+
+          printf 'CMake: expected=%s actual=%s\n' \
+            "${expected_cmake}" "${actual_cmake}"
+
+          printf 'ld:    expected=%s actual=%s\n' \
+            "${expected_ld}" "${actual_ld}"
+
+          test "${actual_gcc}" = "${expected_gcc}"
+          test "${actual_cmake}" = "${expected_cmake}"
+          test "${actual_ld}" = "${expected_ld}"
+
+          echo "Toolchain contract: PASS"
+
       - name: Leakage check
         run: python3 tools/leakage_check.py
 
@@ -335,6 +363,9 @@ jobs:
             echo "commit=${GITHUB_SHA}"
             echo "workflow_run=${GITHUB_RUN_ID}"
             echo "workflow_attempt=${GITHUB_RUN_ATTEMPT}"
+            echo "gcc=$(gcc -dumpfullversion -dumpversion)"
+            echo "cmake=$(cmake --version | awk 'NR==1 {print $3}')"
+            echo "ld=$(ld --version | awk 'NR==1 {print $NF}')"
           } > build/provenance.txt
 
       - name: Generate signed build attestation
