@@ -345,6 +345,106 @@ jobs:
       - name: Runtime test
         run: ctest --test-dir build --output-on-failure
 
+      - name: Run public ABI benchmark
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          ./build/mobius_bridge_bench \
+            > build/benchmark.csv
+
+          cat build/benchmark.csv
+
+      - name: Validate benchmark result
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          python3 - <<'PY'
+          import csv
+          from pathlib import Path
+
+          path = Path("build/benchmark.csv")
+
+          with path.open(
+              "r",
+              encoding="utf-8",
+              newline="",
+          ) as handle:
+              rows = list(csv.reader(handle))
+
+          expected_header = [
+              "bytes",
+              "ns_per_call",
+              "calls_per_second",
+              "MiB_per_second",
+          ]
+
+          expected_sizes = [
+              "0",
+              "1",
+              "8",
+              "64",
+              "256",
+              "1024",
+              "4096",
+          ]
+
+          if not rows:
+              raise SystemExit(
+                  "benchmark.csv is empty"
+              )
+
+          if rows[0] != expected_header:
+              raise SystemExit(
+                  "benchmark header mismatch"
+              )
+
+          if len(rows) != 8:
+              raise SystemExit(
+                  "unexpected benchmark row count"
+              )
+
+          actual_sizes = [
+              row[0]
+              for row in rows[1:]
+          ]
+
+          if actual_sizes != expected_sizes:
+              raise SystemExit(
+                  "benchmark payload sizes mismatch"
+              )
+
+          for row in rows[1:]:
+              if len(row) != 4:
+                  raise SystemExit(
+                      "malformed benchmark row"
+                  )
+
+              ns_per_call = float(row[1])
+              calls_per_second = float(row[2])
+              mib_per_second = float(row[3])
+
+              if ns_per_call <= 0.0:
+                  raise SystemExit(
+                      "invalid ns_per_call"
+                  )
+
+              if calls_per_second <= 0.0:
+                  raise SystemExit(
+                      "invalid calls_per_second"
+                  )
+
+              if mib_per_second < 0.0:
+                  raise SystemExit(
+                      "invalid MiB_per_second"
+                  )
+
+          print(
+              "Public ABI benchmark result: PASS"
+          )
+          PY
+
       - name: Generate SHA256
         working-directory: build
         run: |
@@ -394,6 +494,7 @@ jobs:
             build/libmobius_bridge.so
             build/libmobius_bridge.so.sha256
             build/provenance.txt
+            build/benchmark.csv
           if-no-files-found: error
           retention-days: 14
           compression-level: 0
