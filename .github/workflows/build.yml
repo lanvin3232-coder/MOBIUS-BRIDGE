@@ -22,10 +22,33 @@ jobs:
         run: python3 tools/leakage_check.py
 
       - name: Configure
-        run: cmake -S . -B build
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
-        run: cmake --build build --config Release
+        run: cmake --build build
+
+      - name: Verify ABI exports
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          nm -D --defined-only build/libmobius_bridge.so \
+            | awk '{print $3}' \
+            | sort > actual_exports.txt
+
+          printf "%s\n" \
+            mb_create \
+            mb_destroy \
+            mb_run \
+            | sort > expected_exports.txt
+
+          echo "Expected exports:"
+          cat expected_exports.txt
+
+          echo "Actual exports:"
+          cat actual_exports.txt
+
+          diff -u expected_exports.txt actual_exports.txt
 
       - name: Test
         run: ctest --test-dir build --output-on-failure
