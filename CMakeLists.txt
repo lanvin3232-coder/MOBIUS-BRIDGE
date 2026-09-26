@@ -1,0 +1,18 @@
+cmake_minimum_required(VERSION 3.16)
+
+project(MOBIUS_BRIDGE C)
+
+add_library(mobius_bridge STATIC
+    src/bridge_stub.c
+)
+
+target_include_directories(mobius_bridge
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+set_target_properties(mobius_bridge PROPERTIES
+    C_STANDARD 11
+    C_STANDARD_REQUIRED YES
+    C_EXTENSIONS NO
+)
