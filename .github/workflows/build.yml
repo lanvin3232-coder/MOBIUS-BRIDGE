@@ -21,11 +21,44 @@ jobs:
       - name: Leakage check
         run: python3 tools/leakage_check.py
 
-      - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+      - name: Configure Release
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_FLAGS_RELEASE="-O3 -DNDEBUG -ffile-prefix-map=${GITHUB_WORKSPACE}=. -fdebug-prefix-map=${GITHUB_WORKSPACE}=."
 
       - name: Build
         run: cmake --build build
+
+      - name: Strip release binary
+        run: |
+          strip --strip-unneeded build/libmobius_bridge.so
+
+      - name: Check debug sections
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if readelf -S build/libmobius_bridge.so \
+            | grep -E '\.debug_|\.zdebug_'; then
+            echo "Debug information detected."
+            exit 1
+          fi
+
+          echo "Debug section check: PASS"
+
+      - name: Check absolute path leakage
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if strings -a build/libmobius_bridge.so \
+            | grep -F "${GITHUB_WORKSPACE}"; then
+            echo "Absolute build path detected."
+            exit 1
+          fi
+
+          echo "Absolute path check: PASS"
 
       - name: Verify ABI exports
         shell: bash
@@ -50,5 +83,10 @@ jobs:
 
           diff -u expected_exports.txt actual_exports.txt
 
-      - name: Test
+      - name: Runtime test
         run: ctest --test-dir build --output-on-failure
+
+      - name: Generate SHA256
+        run: |
+          sha256sum build/libmobius_bridge.so \
+            | tee build/libmobius_bridge.so.sha256
