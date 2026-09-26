@@ -75,18 +75,41 @@ jobs:
             mb_run \
             | sort > expected_exports.txt
 
-          echo "Expected exports:"
-          cat expected_exports.txt
-
-          echo "Actual exports:"
-          cat actual_exports.txt
-
           diff -u expected_exports.txt actual_exports.txt
+
+          echo "ABI export check: PASS"
 
       - name: Runtime test
         run: ctest --test-dir build --output-on-failure
 
       - name: Generate SHA256
+        working-directory: build
         run: |
-          sha256sum build/libmobius_bridge.so \
-            | tee build/libmobius_bridge.so.sha256
+          sha256sum libmobius_bridge.so > libmobius_bridge.so.sha256
+          cat libmobius_bridge.so.sha256
+
+      - name: Verify SHA256
+        working-directory: build
+        run: |
+          sha256sum -c libmobius_bridge.so.sha256
+
+      - name: Write provenance
+        run: |
+          {
+            echo "repository=${GITHUB_REPOSITORY}"
+            echo "commit=${GITHUB_SHA}"
+            echo "workflow_run=${GITHUB_RUN_ID}"
+            echo "workflow_attempt=${GITHUB_RUN_ATTEMPT}"
+          } > build/provenance.txt
+
+      - name: Upload verified bridge artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobius-bridge-linux-${{ github.sha }}
+          path: |
+            build/libmobius_bridge.so
+            build/libmobius_bridge.so.sha256
+            build/provenance.txt
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
