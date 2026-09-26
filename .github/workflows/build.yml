@@ -18,6 +18,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Leakage check
+        run: python3 tools/leakage_check.py
+
       - name: Configure
         run: cmake -S . -B build
 
