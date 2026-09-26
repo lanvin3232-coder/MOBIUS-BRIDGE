@@ -242,6 +242,30 @@ jobs:
         run: |
           strip --strip-unneeded build/libmobius_bridge.so
 
+      - name: Verify reproducible release build
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cmake -S . -B build-repro \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_FLAGS_RELEASE="-O3 -DNDEBUG -fstack-protector-strong -D_FORTIFY_SOURCE=2 -ffile-prefix-map=${GITHUB_WORKSPACE}=. -fdebug-prefix-map=${GITHUB_WORKSPACE}=." \
+            -DCMAKE_SHARED_LINKER_FLAGS="-Wl,-z,defs,-z,relro,-z,now,-z,noexecstack"
+
+          cmake --build build-repro
+
+          strip --strip-unneeded build-repro/libmobius_bridge.so
+
+          sha256sum build/libmobius_bridge.so \
+            | awk '{print $1}' > release_hash_a.txt
+
+          sha256sum build-repro/libmobius_bridge.so \
+            | awk '{print $1}' > release_hash_b.txt
+
+          diff -u release_hash_a.txt release_hash_b.txt
+
+          echo "Reproducible release build: PASS"
+
       - name: Check debug sections
         shell: bash
         run: |
