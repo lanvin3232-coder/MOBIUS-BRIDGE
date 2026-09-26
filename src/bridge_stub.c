@@ -9,16 +9,16 @@ struct mb_ctx {
 
 int mb_create(mb_ctx **ctx) {
     if (!ctx) {
-        return -1;
+        return MB_ERR_INVALID;
     }
 
     *ctx = (mb_ctx *)malloc(sizeof(mb_ctx));
     if (!*ctx) {
-        return -2;
+        return MB_ERR_NOMEM;
     }
 
     (*ctx)->ready = 1;
-    return 0;
+    return MB_OK;
 }
 
 int mb_run(
@@ -29,27 +29,27 @@ int mb_run(
     size_t *output_len
 ) {
     if (!ctx || !ctx->ready || !output_len) {
-        return -1;
+        return MB_ERR_INVALID;
     }
 
     if (input_len > 0 && !input) {
-        return -3;
+        return MB_ERR_NULL_INPUT;
     }
 
     if (input_len == 0) {
         *output_len = 0;
-        return 0;
+        return MB_OK;
     }
 
     if (!output || *output_len < input_len) {
         *output_len = input_len;
-        return 1;
+        return MB_NEED_OUTPUT;
     }
 
     memcpy(output, input, input_len);
 
     *output_len = input_len;
-    return 0;
+    return MB_OK;
 }
 
 void mb_destroy(mb_ctx *ctx) {
