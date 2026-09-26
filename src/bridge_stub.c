@@ -36,14 +36,17 @@ int mb_run(
         return -3;
     }
 
+    if (input_len == 0) {
+        *output_len = 0;
+        return 0;
+    }
+
     if (!output || *output_len < input_len) {
         *output_len = input_len;
         return 1;
     }
 
-    if (input_len > 0) {
-        memcpy(output, input, input_len);
-    }
+    memcpy(output, input, input_len);
 
     *output_len = input_len;
     return 0;
