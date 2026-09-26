@@ -279,6 +279,115 @@ static int test_boundary_sweep(void) {
     return 0;
 }
 
+static int test_overlapping_buffers(void) {
+    mb_ctx *ctx = NULL;
+
+    if (mb_create(&ctx) != MB_OK) {
+        return 80;
+    }
+
+    {
+        unsigned char buffer[64];
+        unsigned char expected[64];
+
+        for (size_t i = 0; i < sizeof(buffer); ++i) {
+            buffer[i] = (unsigned char)i;
+        }
+
+        memcpy(expected, buffer, sizeof(buffer));
+
+        size_t output_len = sizeof(buffer);
+
+        int rc = mb_run(
+            ctx,
+            buffer,
+            sizeof(buffer),
+            buffer,
+            &output_len
+        );
+
+        if (rc != MB_OK) {
+            mb_destroy(ctx);
+            return 81;
+        }
+
+        if (output_len != sizeof(buffer)) {
+            mb_destroy(ctx);
+            return 82;
+        }
+
+        if (memcmp(buffer, expected, sizeof(buffer)) != 0) {
+            mb_destroy(ctx);
+            return 83;
+        }
+    }
+
+    {
+        unsigned char buffer[64];
+        unsigned char expected[32];
+
+        for (size_t i = 0; i < sizeof(buffer); ++i) {
+            buffer[i] = (unsigned char)(0x40u + i);
+        }
+
+        memcpy(expected, buffer, sizeof(expected));
+
+        size_t output_len = sizeof(expected);
+
+        int rc = mb_run(
+            ctx,
+            buffer,
+            sizeof(expected),
+            buffer + 8,
+            &output_len
+        );
+
+        if (rc != MB_OK) {
+            mb_destroy(ctx);
+            return 84;
+        }
+
+        if (memcmp(buffer + 8, expected, sizeof(expected)) != 0) {
+            mb_destroy(ctx);
+            return 85;
+        }
+    }
+
+    {
+        unsigned char buffer[64];
+        unsigned char expected[32];
+
+        for (size_t i = 0; i < sizeof(buffer); ++i) {
+            buffer[i] = (unsigned char)(0x80u + i);
+        }
+
+        memcpy(expected, buffer + 8, sizeof(expected));
+
+        size_t output_len = sizeof(expected);
+
+        int rc = mb_run(
+            ctx,
+            buffer + 8,
+            sizeof(expected),
+            buffer,
+            &output_len
+        );
+
+        if (rc != MB_OK) {
+            mb_destroy(ctx);
+            return 86;
+        }
+
+        if (memcmp(buffer, expected, sizeof(expected)) != 0) {
+            mb_destroy(ctx);
+            return 87;
+        }
+    }
+
+    mb_destroy(ctx);
+    return 0;
+}
+
 int main(void) {
     int rc;
 
@@ -306,6 +415,9 @@ int main(void) {
     rc = test_boundary_sweep();
     if (rc != 0) return rc;
 
-    printf("MOBIUS-BRIDGE ABI + boundary sweep: PASS\n");
+    rc = test_overlapping_buffers();
+    if (rc != 0) return rc;
+
+    printf("MOBIUS-BRIDGE ABI + boundary + overlap tests: PASS\n");
     return 0;
 }
