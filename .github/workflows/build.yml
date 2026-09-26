@@ -342,6 +342,19 @@ jobs:
         with:
           subject-path: build/libmobius_bridge.so
 
+      - name: Verify signed build attestation
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          gh attestation verify \
+            build/libmobius_bridge.so \
+            --repo "${GITHUB_REPOSITORY}"
+
+          echo "Signed build attestation verification: PASS"
+
       - name: Upload verified bridge artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
