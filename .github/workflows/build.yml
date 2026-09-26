@@ -116,6 +116,25 @@ jobs:
 
           echo "Dynamic dependency allowlist: PASS"
 
+      - name: Check forbidden capability imports
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          nm -D --undefined-only build/libmobius_bridge.so \
+            | awk '{print $2}' \
+            | sed 's/@.*//' \
+            | sort -u > undefined_imports.txt
+
+          forbidden_regex='^(dlopen|dlmopen|dlsym|socket|socketpair|connect|accept|accept4|bind|listen|send|sendto|sendmsg|recv|recvfrom|recvmsg|getaddrinfo|gethostbyname|system|popen|fork|vfork|execve|execv|execvp|execl|execlp|posix_spawn|ptrace)$'
+
+          if grep -E "${forbidden_regex}" undefined_imports.txt; then
+            echo "Forbidden runtime capability import detected."
+            exit 1
+          fi
+
+          echo "Forbidden capability import check: PASS"
+
       - name: Check forbidden runtime paths
         shell: bash
         run: |
