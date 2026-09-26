@@ -19,9 +19,86 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
+          fetch-depth: 0
 
       - name: Leakage check
         run: python3 tools/leakage_check.py
+
+      - name: Git history leakage check
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          python3 - <<'PY'
+          import re
+          import subprocess
+          import sys
+
+          PATTERNS = [
+              re.compile(rb"-----BEGIN [A-Z ]*PRIVATE KEY-----"),
+              re.compile(rb"ghp_[A-Za-z0-9]{20,}"),
+              re.compile(rb"github_pat_[A-Za-z0-9_]{20,}"),
+              re.compile(rb"sk-[A-Za-z0-9_-]{20,}"),
+              re.compile(rb"AKIA[0-9A-Z]{16}"),
+              re.compile(
+                  rb"authorization\s*:\s*bearer\s+\S+",
+                  re.IGNORECASE,
+              ),
+              re.compile(
+                  rb"(password|passwd|secret|api[_-]?key)"
+                  rb"\s*=\s*['\"][^'\"]+['\"]",
+                  re.IGNORECASE,
+              ),
+          ]
+
+          objects = subprocess.check_output(
+              ["git", "rev-list", "--objects", "--all"],
+              text=True,
+          )
+
+          checked = set()
+
+          for line in objects.splitlines():
+              if not line:
+                  continue
+
+              oid = line.split(" ", 1)[0]
+
+              if oid in checked:
+                  continue
+
+              checked.add(oid)
+
+              obj_type = subprocess.check_output(
+                  ["git", "cat-file", "-t", oid],
+                  text=True,
+              ).strip()
+
+              if obj_type != "blob":
+                  continue
+
+              size = int(
+                  subprocess.check_output(
+                      ["git", "cat-file", "-s", oid],
+                      text=True,
+                  ).strip()
+              )
+
+              if size > 5 * 1024 * 1024:
+                  continue
+
+              data = subprocess.check_output(
+                  ["git", "cat-file", "blob", oid]
+              )
+
+              for pattern in PATTERNS:
+                  if pattern.search(data):
+                      print("MOBIUS git history leakage check: FAIL")
+                      print("Sensitive pattern detected in reachable Git history.")
+                      sys.exit(1)
+
+          print("MOBIUS git history leakage check: PASS")
+          PY
 
       - name: Configure sanitizer build
         run: |
