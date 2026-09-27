@@ -30,6 +30,29 @@ The private functional build was checked to expose only this three-symbol bridge
 
 ---
 
+## Verified Private Binary
+
+The private functional bridge binary associated with this verification run produced the following SHA-256 digest:
+
+```text
+29c04919700bf7b075e0b8bb30303e7e4ea7e14839dde520073bd2c3d857fb6d
+```
+
+Associated verification state:
+
+```text
+ABI     : 0.1.0
+Exports : mb_create / mb_run / mb_destroy
+E2E     : PASS
+```
+
+The binary itself remains private.
+
+Publishing this digest does not publish the private implementation.  
+It provides a public cryptographic identifier for the binary associated with the reported verification result.
+
+---
+
 ## Validation Result
 
 The following validation stages completed successfully:
@@ -46,6 +69,7 @@ Release tests           : PASS
 Bridge integration      : PASS
 ABI export surface      : PASS
 Deterministic execution : PASS
+SHA-256 verification    : PASS
 ```
 
 ---
@@ -81,10 +105,14 @@ architecture topology is required to build the public bridge.
 This evidence demonstrates that a restricted private capability can execute
 behind the MOBIUS-BRIDGE ABI while retaining the same minimal public interface.
 
+It also records a SHA-256 digest for the private functional binary associated
+with the reported successful verification run.
+
 It does **not** claim that:
 
 - the complete private research system is public
 - the public bridge reproduces the private implementation
+- a SHA-256 digest proves the semantic correctness of the private implementation
 - the private implementation is impossible to reverse engineer if distributed
 - this result represents the performance of the complete private system
 
@@ -106,6 +134,22 @@ signed provenance
 ```
 
 without publishing the underlying proprietary implementation.
+
+---
+
+## Binary Identity
+
+```text
+Artifact class : Private functional bridge
+ABI            : MOBIUS-BRIDGE 0.1.0
+Export count   : 3
+E2E status     : PASS
+SHA-256        : 29c04919700bf7b075e0b8bb30303e7e4ea7e14839dde520073bd2c3d857fb6d
+```
+
+A future binary can be compared against this digest.
+
+If even one byte changes, its SHA-256 digest should also be expected to change.
 
 ---
 
