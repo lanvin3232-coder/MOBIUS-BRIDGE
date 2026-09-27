@@ -37,21 +37,45 @@ MMDC v0.1 Restricted Capability
         │
         ▼
 Minimal Result
+```
+
 The benchmark does not call the private capability directly.
+
 All timed capability invocations pass through the MOBIUS-BRIDGE interface.
-Public ABI
+
+---
+
+## Public ABI
+
+```text
 ABI version : 0.1.0
 Exports     : 3
+```
+
 Exported symbols:
+
+```text
 mb_create
 mb_run
 mb_destroy
-Benchmark Identity
+```
+
+---
+
+## Benchmark Identity
+
+```text
 Protocol   : MOBIUS-BLACKBOX-0.2
 Benchmark  : MMDC-BENCH-V0.2
 Capability : MMDC-v0.1
 Status     : PASS
-Functional Verification
+```
+
+---
+
+## Functional Verification
+
+```text
 Checks                : 3
 Successful            : 3
 Failures               : 0
@@ -59,7 +83,11 @@ Failures               : 0
 Deterministic          : PASS
 Hard gate              : PASS
 All-invalid rejection  : PASS
+```
+
 The functional checks verify that:
+
+```text
 hard-invalid candidates remain rejected
 
 all-invalid candidate sets do not return
@@ -67,29 +95,59 @@ a "best bad" candidate
 
 repeated identical requests produce
 identical functional results
-Measurement Configuration
+```
+
+---
+
+## Measurement Configuration
+
+```text
 Warmup calls    : 10,000
 Batch size      : 1,000 bridge calls
 Batch count     : 1,000
 Timed calls     : 1,000,000
 Timer samples   : 10,000
+```
+
 One timer pair surrounds each batch of 1,000 bridge calls.
+
 This reduces timer measurement overhead per individual bridge invocation.
-Timer Baseline
+
+---
+
+## Timer Baseline
+
 Observed timer-pair baseline:
+
+```text
 Mean : 32 ns
 p50  : 30 ns
 p95  : 40 ns
 p99  : 40 ns
 Min  : 20 ns
 Max  : 12,970 ns
+```
+
 Amortized across a 1,000-call benchmark batch:
+
+```text
 Timer overhead per call:
 0.032 ns
-Bridge Performance Result
+```
+
+---
+
+## Bridge Performance Result
+
 Observed across:
+
+```text
 1,000,000 timed MOBIUS-BRIDGE invocations
+```
+
 Results:
+
+```text
 Raw mean / call           : 34 ns
 Timer-amortized / call    : 0.032 ns
 Reported net mean / call  : 33.968 ns
@@ -102,12 +160,26 @@ Batch-average min / call  : 32 ns
 Batch-average max / call  : 93 ns
 
 Observed throughput       : 28,998,382.528 ops/s
+```
+
 The throughput-derived overall mean is approximately:
+
+```text
 34.48 ns / bridge invocation
-The difference from the integer raw_mean_ns_per_call value is caused by integer truncation in the benchmark summary.
-Percentile Interpretation
-The p50, p95, and p99 values above are batch-average per-call values.
+```
+
+The difference from the integer `raw_mean_ns_per_call` value is caused by
+integer truncation in the benchmark summary.
+
+---
+
+## Percentile Interpretation
+
+The p50, p95, and p99 values above are **batch-average per-call values**.
+
 Each measurement sample represents:
+
+```text
 1,000 bridge calls
         │
         ▼
@@ -118,12 +190,26 @@ elapsed time / 1,000
         │
         ▼
 batch-average ns / call
+```
+
 Therefore:
+
+```text
 p99 = 53 ns
-must not be interpreted as the p99 latency of one million individually timed calls.
+```
+
+must not be interpreted as the p99 latency of one million individually timed
+calls.
+
 It is the p99 of the 1,000 batch-average-per-call samples.
-Measurement Boundary
+
+---
+
+## Measurement Boundary
+
 The measured path includes:
+
+```text
 timer start
     │
     ▼
@@ -140,33 +226,61 @@ minimal result
     │
     ▼
 timer stop
+```
+
 The result does not represent Internet or HTTP latency.
+
 The following are outside the benchmark boundary:
+
+```text
 Internet RTT
 DNS
 TLS handshake
 HTTP processing
 external request queues
 client rendering
-Result Interpretation
+```
+
+---
+
+## Result Interpretation
+
 This benchmark demonstrates that the restricted MMDC v0.1 capability:
+
+```text
 executed behind the MOBIUS-BRIDGE ABI
 passed the defined functional invariants
 processed 1,000,000 timed bridge invocations
 produced deterministic benchmark outputs
 rejected hard-invalid cases
 rejected all-invalid candidate sets
+```
+
 and that the observed benchmark run produced approximately:
+
+```text
 34.5 ns mean bridge invocation time
 ~29.0 million bridge invocations / second
+```
+
 under the recorded benchmark environment.
-Scope
+
+---
+
+## Scope
+
 This evidence applies only to:
+
+```text
 MMDC v0.1 restricted private capability
 MOBIUS-BRIDGE ABI 0.1.0
 MMDC-BENCH-V0.2
 the specific benchmark environment
-It does not claim that:
+```
+
+It does **not** claim that:
+
+```text
 the complete private engine runs at 34 ns
 
 the complete research system has been benchmarked
@@ -178,8 +292,15 @@ network requests complete in 34 ns
 all workloads have identical latency
 
 the benchmark represents arbitrary real-world workloads
-Private Boundary
+```
+
+---
+
+## Private Boundary
+
 The following remain private:
+
+```text
 implementation source
 private decision logic
 internal thresholds
@@ -188,14 +309,32 @@ private state
 private architecture
 optimization details
 private repository contents
-Only the standardized bridge boundary and sanitized benchmark evidence are published.
-Binary Identity
-The benchmark result should be bound to the SHA-256 digest of the exact private bridge binary used by the successful v0.2 run.
+```
+
+Only the standardized bridge boundary and sanitized benchmark evidence are
+published.
+
+---
+
+## Binary Identity
+
+The benchmark result should be bound to the SHA-256 digest of the exact
+private bridge binary used by the successful v0.2 run.
+
+```text
 Private bridge SHA-256:
 <INSERT_CURRENT_V0_2_PRIVATE_BRIDGE_SHA256>
+```
+
 The digest identifies the binary.
+
 It does not reveal the implementation.
-Verification Summary
+
+---
+
+## Verification Summary
+
+```text
 Protocol          : MOBIUS-BLACKBOX-0.2
 Benchmark         : MMDC-BENCH-V0.2
 Capability        : MMDC-v0.1
@@ -214,10 +353,10 @@ Batch p99         : 53 ns / call
 Throughput        : ~29.0 M ops/s
 
 Overall status    : PASS
-Principle
-Measure through the bridge. Publish the evidence. Keep the mechanism private.
+```
 
-커밋 메시지:
+---
 
-```text
-publish black-box bridge benchmark v0.2 evidence
+## Principle
+
+> Measure through the bridge. Publish the evidence. Keep the mechanism private.
