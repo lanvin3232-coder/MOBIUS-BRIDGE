@@ -4,7 +4,7 @@
 
 **PASS**
 
-A bridge-compatible private implementation was built and validated in an isolated private CI environment.
+A bridge-compatible restricted private capability was built and validated behind the MOBIUS-BRIDGE ABI in a private CI environment.
 
 The private implementation itself is not published in this repository.
 
@@ -26,16 +26,16 @@ mb_run
 mb_destroy
 ```
 
-The private functional build was checked to expose only this three-symbol bridge surface.
+The private functional build was checked against this three-symbol bridge surface.
 
 ---
 
-## Verified Private Binary
+## Current Verified Private Binary
 
-The private functional bridge binary associated with this verification run produced the following SHA-256 digest:
+The current private functional bridge associated with the successful MMDC v0.1 validation run produced the following SHA-256 digest:
 
 ```text
-29c04919700bf7b075e0b8bb30303e7e4ea7e14839dde520073bd2c3d857fb6d
+d039374f1cb0f0b8320256887eb6b0d6e770c18faee0cd2d17dbe92f07c82d31
 ```
 
 Associated verification state:
@@ -48,29 +48,67 @@ E2E     : PASS
 
 The binary itself remains private.
 
-Publishing this digest does not publish the private implementation.  
-It provides a public cryptographic identifier for the binary associated with the reported verification result.
+The SHA-256 value acts only as a cryptographic identifier for the exact private binary associated with this verification result.
 
 ---
 
 ## Validation Result
 
-The following validation stages completed successfully:
+The private validation run reported successful completion of:
 
 ```text
-Sanitizer configure     : PASS
-Sanitizer build         : PASS
-Sanitizer tests         : PASS
+Sanitizer configure       : PASS
+Sanitizer build           : PASS
+Sanitizer tests           : PASS
 
-Release configure       : PASS
-Release build           : PASS
-Release tests           : PASS
+Release configure         : PASS
+Release build             : PASS
+Release tests             : PASS
 
-Bridge integration      : PASS
-ABI export surface      : PASS
-Deterministic execution : PASS
-SHA-256 verification    : PASS
+Private core test         : PASS
+Bridge integration        : PASS
+ABI export surface        : PASS
+Deterministic execution   : PASS
+
+Hard feasibility gate     : PASS
+Hard-violation rejection  : PASS
+All-invalid rejection     : PASS
+Lexicographic ordering    : PASS
+Deterministic tie-break   : PASS
+
+SHA-256 verification      : PASS
 ```
+
+---
+
+## Decision Boundary
+
+The current restricted private capability follows a bounded decision structure:
+
+```text
+Candidate Set
+      │
+      ▼
+Hard Feasibility Gate
+      │
+      ├── invalid candidate → rejected
+      │
+      ▼
+Feasible Candidates
+      │
+      ▼
+Deterministic Priority Ordering
+      │
+      ▼
+Single Selected Candidate
+      │
+      ▼
+Minimal Bridge Result
+```
+
+A candidate rejected by the hard feasibility stage is not restored by lower-priority metrics.
+
+If no candidate survives the hard gate, the private capability does not return a "best bad" candidate.
 
 ---
 
@@ -83,7 +121,7 @@ External Caller
 MOBIUS-BRIDGE ABI
       │
       ▼
-Private Execution Boundary
+Private Adapter
       │
       ▼
 Restricted Private Capability
@@ -95,25 +133,25 @@ Minimal Result
 The public repository does not contain the private implementation.
 
 No private source repository, internal source path, private commit identifier,
-private algorithm, private coefficient, private threshold, or private
-architecture topology is required to build the public bridge.
+private algorithm details, private coefficients, private thresholds, or private
+architecture topology are required to build the public MOBIUS-BRIDGE repository.
 
 ---
 
 ## Verification Scope
 
-This evidence demonstrates that a restricted private capability can execute
-behind the MOBIUS-BRIDGE ABI while retaining the same minimal public interface.
+This evidence records that a restricted private capability was exercised through
+the MOBIUS-BRIDGE ABI while retaining the same minimal public interface.
 
-It also records a SHA-256 digest for the private functional binary associated
-with the reported successful verification run.
+It also binds the reported successful validation run to the SHA-256 digest of
+the corresponding private functional binary.
 
 It does **not** claim that:
 
 - the complete private research system is public
 - the public bridge reproduces the private implementation
-- a SHA-256 digest proves the semantic correctness of the private implementation
-- the private implementation is impossible to reverse engineer if distributed
+- SHA-256 proves semantic correctness by itself
+- the private binary is impossible to reverse engineer if distributed
 - this result represents the performance of the complete private system
 
 ---
@@ -127,7 +165,7 @@ Public evidence may include:
 ```text
 ABI version
 exported symbol list
-test status
+validation status
 benchmark summaries
 cryptographic digests
 signed provenance
@@ -141,15 +179,16 @@ without publishing the underlying proprietary implementation.
 
 ```text
 Artifact class : Private functional bridge
+Capability     : MMDC v0.1 restricted private slice
 ABI            : MOBIUS-BRIDGE 0.1.0
 Export count   : 3
 E2E status     : PASS
-SHA-256        : 29c04919700bf7b075e0b8bb30303e7e4ea7e14839dde520073bd2c3d857fb6d
+SHA-256        : d039374f1cb0f0b8320256887eb6b0d6e770c18faee0cd2d17dbe92f07c82d31
 ```
 
 A future binary can be compared against this digest.
 
-If even one byte changes, its SHA-256 digest should also be expected to change.
+A changed binary should be expected to produce a different digest.
 
 ---
 
